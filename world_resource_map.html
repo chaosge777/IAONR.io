@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>World Major Natural Resources Map</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            width: 99vw;
+            height: 100vh;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f5f5f5;
+        }
+        .main-title {
+            text-align: center;
+            color: #333;
+            margin: 10px 0;
+            font-size: 24px;
+        }
+        .app-container {
+            width: 85%;
+            height: 95vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+        .content-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            padding: 10px;
+        }
+        .left-sidebar {
+            width: 250px;
+            background-color: #1a4b8c;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+            margin-right: 10px;
+            border-radius: 5px;
+        }
+        .left-sidebar h3 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.3);
+            text-align: center;
+        }
+        .left-sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .left-sidebar li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+        }
+        .left-sidebar li:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .nav-tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            background-color: #f1f1f1;
+        }
+        .nav-tab {
+            padding: 10px 20px;
+            background: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+        }
+        .nav-tab.active {
+            background: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+        }
+        .tab-content-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        .tab-content {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .map-container {
+            width: 90%;
+            height: 90%;
+            position: relative;
+            display: flex;
+            flex-direction: row;
+        }
+        #map {
+            width: 85%;
+            height: 100%;
+            overflow: hidden;
+            border-right: 4px solid #1a4b8c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+        #map img {
+            max-width: 95%;
+            max-height: 85%;
+            object-fit: contain;
+        }
+        #legend {
+            width: 22%;
+            height: 160%;
+            position: relative;
+            padding: 10px;
+        }
+        #legend img {
+            position: absolute;
+            bottom: 400px;
+            right: -20px;
+            max-width: 100%;
+            max-height: 80%;
+            object-fit: contain;
+        }
+        /* 为矿产资源的图例设置特殊样式 */
+        .mineral-legend {
+            bottom: 400px !important;
+            right: -60px !important;
+            max-width: 120% !important;
+            max-height: 70% !important;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .search-section {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .search-label {
+            font-weight: bold;
+            min-width: 80px;
+        }
+        #fieldSelect {
+            min-width: 150px;
+            padding: 5px;
+        }
+        #searchInput {
+            flex: 1;
+            padding: 5px;
+        }
+        .search-button {
+            padding: 5px 15px;
+            background: #1a4b8c;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .return-button {
+            padding: 5px 15px;
+            background: #FF8C00;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .description {
+            padding: 15px;
+            background: #f9f9f9,;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .data-table th, .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .data-table th {
+            background-color: #1a4b8c;
+            color: white;
+        }
+        .data-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .highlighted {
+            background-color: #ffeb3b !important;
+            transition: background-color 0.3s;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <h1 class="main-title" id="map-title">Statistical Data Map Related with Natural Resources in the World</h1>
+        
+        <div class="content-container">
+            <div class="left-sidebar">
+                <h3>World Resource Distribution Maps</h3>
+                <ul>
+                    
+                    <li onclick="changeMap('GDP_1.png')">GDP Distribution</li>
+                    <li onclick="changeMap('population_1.png')">Population Distribution</li>
+                    <li onclick="changeMap('Arable_1.png')">Arable Area Distribution</li>
+                    <li onclick="changeMap('forest_1.png')">Forest Area Distribution</li>
+                    <li onclick="changeMap('rareearth_1.png')">Mine production, rare-earth-oxide equivalent</li>
+                    <li onclick="changeMap('iron_1.png')">Mine production, iron content</li>
+                    <li onclick="changeMap('copper_1.png')">Mine production, recoverable copper content</li>
+                    <li onclick="changeMap('lithium_1.png')">Mine production, lithium content</li>
+                    <li onclick="changeMap('Mangrove_1.png')">Global Mangrove Distribution</li>
+                </ul>
+            </div>
+            
+            <div class="main-content">
+                <div class="nav-tabs">
+                    <div class="nav-tab active" onclick="showTab('map-view')">Map View</div>
+                    <div class="nav-tab" onclick="showTab('map-description')">Map And Data Description</div>
+                    <div class="nav-tab" onclick="showTab('resource-table')">World Resource Query Table</div>
+                    <div class="nav-tab" onclick="showTab('focus-mangrove')">Focus On Mangrove</div>
+                </div>
+                
+                <div class="tab-content-container">
+                    <div id="map-view" class="tab-content active">
+                        <div class="map-container">
+                            <div id="map">
+                                <!-- Map image will be inserted here by JavaScript -->
+                            </div>
+                            <div id="legend">
+                                <!-- Legend image will be inserted here by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="map-description" class="tab-content">
+                        <div class="description">
+                            <h3>About This Map</h3>
+                            <p>This interactive map displays the distribution of major natural resources across the world. The data includes population, GDP, land area, forest area, Renewable internal freshwater resources, and mineral reserves such as rare earth elements, iron, copper, and lithium.</p>
+                            <p>You can explore different resource distributions by selecting from the menu on the left side. The search functionality allows you to find specific countries and their data.</p>
+                            
+                            <h3>Data Sources</h3>
+                            <p>The data on population, GDP, land area, arable land, forest area, and 2021 renewable internal freshwater resources for countries worldwide are sourced from the World Development Indicators published by the World Bank. 
+                            <br><br>The 2024 data on rare earth reserves, iron reserves, copper reserves, and lithium reserves originate from the Mineral Commodity Summaries 2025 – World Production, Capacity, and Reserves Commodity Data Release published by the United States Geological Survey (USGS). (The data of 0 is the default value in the official data)</p>
+                            <p>The 2020 global mangrove distribution data is derived from the Global Mangrove Watch (1996–2020) Version 3.0 dataset released by the Global Mangrove Watch organization.The study has used L-band Synthetic Aperture Radar (SAR) global mosaic datasets from the Japan Aerospace Exploration Agency (JAXA) for 11 epochs from 1996 to 2020 to develop a long-term time-series of global mangrove extent and change. The study used a map-to-image approach to change detection where the baseline map (GMW v2.5) was updated using thresholding and a contextual mangrove change mask. This approach was applied between all image-date pairs producing 10 maps for each epoch, which were summarised to produce the global mangrove time-series. The resulting mangrove extent maps had an estimated accuracy of 87.4 % (95th conf. int.: 86.2 - 88.6 %), although the accuracies of the individual gain and loss change classes were lower at 58.1 % (52.4 - 63.9 %) and 60.6 % (56.1 - 64.8 %), respectively. Sources of error included a mis-registration in the SAR mosaic datasets, which could only be partially corrected for, but also confusion in fragmented areas of mangroves, such as around aquaculture ponds. Overall, 152,604 km2 (133,996 - 176,910) of mangroves were identified for 1996, with this decreasing by -5,245 km2 (-13,587 - 3686) resulting in a total extent of 147,359 km2 (127,925 - 168,895) in 2020, and representing an estimated loss of 3.4 % over the 24-year time period. The Global Mangrove Watch Version 3.0 represents the most comprehensive record of global mangrove change achieved to date and is expected to support a wide range of activities, including the ongoing monitoring of the global coastal environment, defining and assessments of progress towards conservation targets, protected area planning and risk assessments of mangrove ecosystems worldwide.</p>
+
+                            <h3>External Links</h3>
+                            <p>
+                                <a href="https://www.sciencebase.gov/catalog/item/6798fd34d34ea8c18376e8ee" target="_blank">USGS Mineral Commodity Summaries 2024</a> | 
+                                <a href="https://datacatalog.worldbank.org/search/dataset/0037712/World-Development-Indicators" target="_blank">World Development Indicators</a> | 
+                                <a href="https://www.globalmangrovewatch.org/" target="_blank">Global Mangrove Watch</a>
+                            </p>
+                        </div>
+                    </div>
+
+                    
+                    
+                    <div id="resource-table" class="tab-content">
+                        <div class="search-section">
+                            <span class="search-label">Search:</span>
+                            <select id="fieldSelect">
+                                <option value="Country Name">Country Name</option>
+                                <option value="2023 Population">Population</option>
+                                <option value="2023 GDP / current US$">GDP</option>
+                                <option value="2022 Land area / sq km">Land Area</option>
+                                <option value="2021 Arable land / ha">Arable Land</option>
+                                <option value="2022 Forest area / sq km">Forest Area</option>
+                                <option value="2021 Renewable internal freshwater resources / billion m³">Freshwater Resources</option>
+                                <option value="2024 Rare earth reserves / t">Rare Earth Reserves</option>
+                                <option value="2024 Iron reserves / 1000t">Iron Reserves</option>
+                                <option value="2024 Copper reserves / 1000t">Copper Reserves</option>
+                                <option value="2024 Lithium reserves / t">Lithium Reserves</option>
+                                <option value="2020 Global Mangrove Area /ha">Mangrove Area</option>
+                            </select>
+                            <input type="text" id="searchInput" placeholder="Enter search term...">
+                            <button class="search-button" onclick="searchData()">Search</button>
+                            <button class="return-button" onclick="resetTable()">Return</button>
+                        </div>
+
+                        <div class="data-table-container">
+                            <table class="data-table" id="resourceTable">
+                                <thead>
+                                    <tr>
+                                        <th>Country Name</th>
+                                        <th>Population (2023)</th>
+                                        <th>GDP (2023, US$)</th>
+                                        <th>Land Area (2022, km²)</th>
+                                        <th>Arable Land (2021, ha)</th>
+                                        <th>Forest Area (2022, km²)</th>
+                                        <th>Renewable internal freshwater (2021, billion m³)</th>
+                                        <th>Rare earth reserves (2024, t)</th>
+                                        <th>Iron reserves (2024, kt)</th>
+                                        <th>Copper reserves (2024, kt)</th>
+                                        <th>Lithium reserves (2024, t)</th>
+                                        <th>Mangrove Area (2020, ha)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tableBody">
+                                    <!-- Table data will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="focus-mangrove" class="tab-content">
+                        <div style="padding: 20px;">
+                            <h2 style="margin-top: 30px;">The status of mangroves in 2020</h2>
+                            <div id="mangrove-area" style="display: flex; flex-wrap: wrap; align-items: center; margin-bottom: 30px; height: auto;">
+                                <div style="flex: 1; padding: 20px; min-width: 300px;">
+                                    <div style="font-size: 14px; color: #333; margin-bottom: 10px;">The area of mangrove habitat in <strong>the world</strong> was</div>
+                                    <div style="font-size: 22px; font-weight: bold; color: #000; margin-bottom: 10px;">147,358.99 km<sup>2</sup> <span style="color: #00cfcf;">in 2020</span></div>
+                                    <div style="font-size: 14px; color: #333; margin-bottom: 10px;">this represents a linear coverage of <span style="font-size: 22px; font-weight: bold; color: #00cfcf;">14.93%</span> of the <span style="font-size: 22px; font-weight: bold; color: #000;">2,139,308.93 km</span> of the coastline.</div>
+                                    <div style="margin-top: 20px;">
+                                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                                            <div style="width: 12px; height: 12px; background-color: #00cfcf; margin-right: 8px; border-radius: 2px;"></div>
+                                            <div>Coastline coverage in 2020: 319,338.96 km</div>
+                                        </div>
+                                        <div style="display: flex; align-items: center;">
+                                            <div style="width: 12px; height: 12px; background-color: #f0f0f0; margin-right: 8px; border-radius: 2px;"></div>
+                                            <div>Non mangroves: 1,819,969.96 km</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="mangrove-gauge" style="flex: 1; height: 300px; min-width: 300px;"></div>
+                            </div>
+                            <br>
+                            <br>
+                            <br>
+                            <h2 style="margin-top: 30px;">1996-2020 World Mangrove Area Loss Trend</h2>
+                            <div id="mangrove-trend" style="height: 300px;"></div>
+                            <br>
+                            <br>
+                            <br>
+                            <br>
+                            <br>
+                            <h2 style="margin-top: 30px;">Distribution of Mangroves within Different Regions of The Globe</h2>
+                            <div style="display: flex; flex-wrap: wrap; margin-top: 20px;">
+                                <div id="mangrove-region" style="height: 400px; flex: 1; min-width: 400px;"></div>
+                                <div id="mangrove-region-table" style="flex: 1; min-width: 400px; display: flex; align-items: center; justify-content: center;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+                   
+
+    <div class="description" id="rawData" style="display: none;">
+        Country NAME	2023 Population	2023 GDP / current US$	2022 Land area / sq km	2021 Arable land / hectares	2022 Forest area / sq km	2021 Renewable internal freshwater resources / billion cubic meters	2024 rare_earth reserves / t	2024 iron reserves / 1000t	2024 copper reserves / 1000t	2024 lithium reserves / t	2020 Global Mangrove Area /ha
+        Russian Federation	143826130	2021421476040 	16376870	121649000	8153116	4312	3800000	14000	80000	0	0
+        Peoples Republic of China	1410710000	17794783039600 	9388210	108862000	2237373.2	2812.9	44000000	6900	41000	3000000	21273.45
+        United States Of America	334914895	27720709000000 	9147420	157736800	3097950	2818	1900000	2300	47000	1800000	245768.73
+        Canada	40097761	2142470914400 	8788700	38259000	3468541.311	2850	830000	2300	8300	1200000	0
+        Federative Republic of Brazil	211140729	2173665655940 	8358140	58252760	4941960.222	5661	21000000	15000	0	390000	1084664.72
+        Commonwealth of Australia	26658948	1728057316700 	7692020	31265000	1340051	492	5700000	27000	100000	7000000	1008982.69
+        Republic of India	1438069596	3567551674620 	2973190	154447948	726928	1446	6900000	3400	2200	0	452038.46
+        Argentina	45538401	646075277525 	2736690	42208759.7	283552.222	292	0	0	0	4000000	0
+        Republic of Kazakhstan	20330104	262641892079 	2699700	29669700	35131.589	64.35	0	900	20000	0	0
+        People's Democratic Republic of Algeria	46164219	247626161016 	2381741	7530600	19681.111	11.247	0	0	0	0	0
+        Democratic Republic of Congo	105789731	66383287003 	2267050	13680000	1239524.911	900	0	0	0	0	20598.6
+        Kingdom of Saudi Arabia	33264292	1067582933330 	2149690	3430000	9770	2.4	0	0	0	0	6123.65
+        United States of Mexico	129739759	1789114434840 	1943950	20084000	654365.489	409	0	0	53000	0	859220.8
+        Republic of Indonesia	281190067	1371171152330 	1892555.47	26300000	909221.311	2018.7	0	0	21000	0	3096839.68
+        Republic of the Sudan	50042791	109265503111 	1868000	20994840	180152.3	4	0	0	0	0	565.92
+        Great Socialist People	7305659	45096462972 	1759540	1720000	2170	0.7	0	0	0	0	0
+        Islamic Republic of Iran	90608707	404625655205 	1622500	15699000	107758.167	128.5	0	1500	0	0	10795.6
+        Mongolia	3481145	20325121394 	1557506.789	1332800	141705.6	34.8	0	0	0	0	0
+        Republic of Peru	33845617	267603248655 	1280000	4290296	719847.011	1641	0	1500	100000	0	4954.25
+        Republic of Niger	26159867	16819170421 	1266700	17700000	10548.6	3.5	0	0	0	0	0
+        Republic of Chad	19319064	13149325362 	1259200	5300000	40914.444	15	0	0	0	0	0
+        Angola	36749906	84824654482 	1246700	5373000	654972.511	148	0	0	0	0	29336.96
+        Republic of Mali	23769127	20661794596 	1220190	8341000	132960	60	0	0	0	0	0
+        Republic of South Africa	63212384	380699271815 	1213090	12000000	169772.9	44.8	860000	590	0	0	1950.07
+        Federal Democratic Republic of Ethiopia	128691692	163697927594 	1128571.4	16314000	169225	122	0	0	0	0	0
+        Republic of Colombia	52321152	363493841244 	1109500	1993000	587433.389	2145	0	0	0	0	275118.15
+        Republic of Bolivia	12244159	45135398009 	1083300	4868367.2	504164.444	303.5	0	0	0	0	0
+        Islamic Republic of Mauritania	5022441	10651709412 	1030700	450000	3018.889	0.4	0	0	0	0	226.38
+        Arab Republic of Egypt	114535772	396002496997 	995450	3077000	449.8	1	0	0	0	0	253.51
+        Federal Republic of Nigeria	227882945	363846332835 	910770	36872000	213003.5	221	0	0	0	0	858349.07
+        United Republic of Tanzania	66617606	79062403821 	885800	13502500	448070	84	890000	0	0	0	114457.32
+        Republic of Venezuela	28300854	0 	882050	2600000	461267.8	805	0	0	0	0	266618.73
+        Republic of Namibia	2963095	12351025067 	823290	800000	64968.8	6.16	0	0	0	14000	0
+        Republic of Mozambique	33635160	20954220984 	786380	5650000	362673.196	100.3	0	0	0	0	323634.37
+        Islamic Republic of Pakistan	247504495	337912301398 	770880	30510000	36432.2	55	0	0	0	0	77453.61
+        Republic of Turkey	85325965	1118252964260 	769630	19881000	225323.6	227	0	99	0	0	0
+        Republic of Chile	19658835	335533331669 	743532	1313900	184565.266	885	0	0	190000	9300000	0
+        Republic of Zambia	20723965	27577956471 	743390	3800000	444376.011	80.2	0	0	21000	0	0
+        Union of Myanmar	54133798	66757619000 	652670	10990000	279644.7	1002.8	0	0	0	0	561251.07
+        Afghanistan	41454761	17233051620 	652230	7829000	12084.4	47.15	0	0	0	0	0
+        Somalia Republic	18358615	10968517090 	627340	1100000	58265	6	0	0	0	0	3474.91
+        Central African Republic	5152421	2555492085 	622980	1800000	222430	141	0	0	0	0	0
+        Republic of Madagascar	31195932	15790113247 	581800	3000000	124033.789	337	0	0	0	0	275723.14
+        Ukraine	37732836	178757021965 	579400	32924000	97020	55.1	0	2300	0	0	0
+        Republic of Kenya	55339003	108038588971 	569140	5800000	36110.9	20.7	0	0	0	0	52153.35
+        Republic of Botswana	2480244	19396084498 	566730	260000	150181	2.4	0	0	0	0	0
+        France Republic	68287487	3051831611380 	547557	17956560	174198	200	0	0	0	0	0
+        Republic of Yemen	39390799	0 	527970	1158000	5490	2.1	0	0	0	0	1426.26
+        Kingdom of Thailand	71702435	514968699239 	510890	17150000	198010	224.51	4500	0	0	0	249650.28
+        Kingdom of Spain	48347910	1620090734960 	499713.681	11550053.4	185807.5	111.2	0	0	0	0	0
+        Republic of Cameroon	28372687	49279410983 	472710	6200000	202284.8	273	0	0	0	0	214169.23
+        Turkmenistan	7364438	60628857143 	469930	1940000	41270	1.405	0	0	0	0	0
+        Independent State of Papua New Guinea	10389635	30729242919 	452860	331000	357887	801	0	0	0	0	426423.91
+        Kingdom of Morocco	37712505	144417103250 	446300	7512000	57633.789	29	0	0	0	0	0
+        Republic of Uzbekistan	35652307	101591769702 	440652	4016100	37413.4	16.34	0	0	0	0	0
+        Republic of Iraq	45074049	250842782139 	434128	4969000	8250	35.2	0	0	0	0	0
+        Greenland	56865	0 	410450	0	2.2	0	1500000	0	0	0	0
+        Kingdom of Sweden	10536632	584960475767 	407280	2535170	279800	171	0	600	0	0	0
+        Republic of Paraguay	6844146	42956263544 	396012.042	4734000	155435.889	117	0	0	0	0	0
+        Republic of Zimbabwe	16340822	35231367886 	386850	4000000	173524.4	12.26	0	0	0	480000	0
+        Japan	124516650	4204494802430 	364500	4086000	249350	430	0	0	0	0	866.89
+        Kingdom of Norway	5519594	485310823604 	364270	804000	121956	382	0	0	0	0	0
+        Federal Republic of Germany	83280000	4525703903630 	349360	11658000	114190	107	0	0	0	0	0
+        Republic of Congo	6182885	15321055823 	341500	550000	219160	222	0	0	80000	0	2940.21
+        Malaysia	35126298	399705169318 	328550	826000	190137.4	580	0	0	0	0	570992.01
+        Republic of Cote df Ivoire	31165654	78875489245 	318000	3500000	26109.389	76.84	0	0	0	0	7129.39
+        Socialist Republic of Viet Nam	100352192	429716969044 	313429	6787000	147948.9	359.42	3500000	0	0	0	165301.76
+        Sultanate of Oman	5049269	108810923277 	309500	82610	24.111	1.4	0	0	0	0	531.78
+        Republic of Poland	36687353	809200697797 	306090	11078760	95070	53.6	0	0	34000	0	0
+        Republic of Finland	5583911	295532341255 	303947.7	2243000	224090	107	0	0	0	0	0
+        Republic of Philippines	114891199	437146372730 	298170	5590000	72583.7	479	0	0	0	0	274042.5
+        Italian Republic	58993475	2300941152990 	295720	7192812	96737.5	182.5	0	0	0	0	0
+        Burkina Faso	23025776	20324617845 	273600	6100000	61164	12.5	0	0	0	0	0
+        New Zealand	5223100	252175506110 	263310	616000	99318.856	327	0	0	0	0	25825.72
+        Gabonese Republic	2484789	19388402542 	257670	325000	235068.4	164	0	0	0	0	190154.1
+        Republic of Ecuador	17980083	118844826000 	248360	1024000	123692.9	442.4	0	0	0	0	151657.67
+        Republic of Guinea	14405468	22199409741 	245720	3100000	61090	226	0	0	0	0	232990.31
+        United Kingdom of Great Britain and Nort	68350000	3380854520810 	241930	6009804.2	32069	145	0	0	0	0	4.61
+        Lao People	7664993	15843155731 	230800	1224000	165265	190.4	0	0	0	0	0
+        Republic of Ghana	33787914	76370396722 	227533	4708900	80001.611	30.3	0	0	0	0	9575.53
+        Repubic of Belarus	9178298	71857382746 	202990	5624000	87966	34	0	0	0	0	0
+        Republic of Uganda	48656601	48768955863 	200520	6900000	22553.911	39	0	0	0	0	0
+        Guyana	826353	17159509566 	196850	420000	183969.311	241	0	0	0	0	26052.55
+        Republic of Senegal	18077573	30848333084 	192530	3830000	79881.6	25.8	0	0	0	0	148914.13
+        KyrgyzSTRepublic	7099750	13987627909 	191800	1287400	13518.6	48.93	0	0	0	0	0
+        Syrian Arab Republic	23594623	0 	185179.709	4660617	5220.8	7.132	0	0	0	0	0
+        Kingdom of Cambodia	17423880	42335646896 	176520	4120139.7	77569.9	120.6	0	0	0	0	16930.98
+        Oriental Republic of Uruguay	3388081	77240830878 	175020	2030605	20730	92.2	0	0	0	0	0
+        Republic of Suriname	628886	3455146281 	160507.61	58000	151718.011	99	0	0	0	0	83626.8
+        Republic of Tunisia	12200431	48529595417 	155360	2831300	7057.9	4.195	0	0	0	0	0
+        Kingdom of Nepal	29694614	40908073367 	143350	2113700	59620.3	198.2	0	0	0	0	0
+        Republic of Tajikistan	10389799	12060602009 	138790	838000	4258	63.46	0	0	0	0	0
+        Hellenic Republic	10405588	243498333238 	128900	2131930.4	39018	58	0	0	0	0	0
+        State of Eritrea	3470390	0 	121040.829	690000	10489.4	2.8	0	0	0	0	6851.78
+        Democratic People's Republic of Korea	26418204	0 	120410	2295000	59876.3	67	0	0	0	0	0
+        Republic of Nicaragua	6823613	17829218219 	120340	1503000	32075.3	156.21	0	0	0	0	66623.12
+        Republic of Benin	14111034	19676049076 	112760	2800000	30351.5	10.3	0	0	0	0	2944.63
+        Republic of Honduras	10644851	34400509852 	111890	1018000	63173.6	90.66	0	0	0	0	50773.25
+        Republic of Bulgaria	6446596	102407653021 	108560	3500475.5	39190	21	0	0	0	0	0
+        Republic of Guatemala	18124838	104450210572 	107160	1554000	35046	109.2	0	0	0	0	20669.4
+        Republic of Cuba	11019931	0 	103800	2908600	32420	38.12	0	0	0	0	390118.19
+        Republic of Iceland	393349	31325116556 	100830	121000	526.6	170	0	0	0	0	0
+        Republic of Korea	51712619	1712792854200 	97600	1343000	62670	64.85	0	0	0	0	0
+        Republic of Liberia	5493031	4240000000 	96320	500000	75569.2	200	0	0	0	0	19734.57
+        Republic of Malawi	21104482	12712150082 	94280	4000000	21577	16.14	0	0	0	0	0
+        Portuguess Republic	10578174	289114289664 	91605.6	965233.7	33120	38	0	0	0	0	0
+        Republic of Hungary	9592186	212388906459 	91260	4139704.4	20500.989	6	0	0	0	0	0
+        Hashemite Kingdom of Jordan	11439213	50967475352 	88794	199200	975	0.682	0	0	0	0	0
+        Republic of Azerbaijan	10153958	72356176471 	82650	2089000	11548.256	8.115	0	0	0	0	0
+        Republic of Austria	9131761	511685203845 	82520	1319765.4	38954.5	55	0	0	0	0	0
+        Czech Republic	10864042	343207874554 	77171.73	2475335	26807.1	13.15	0	0	0	0	0
+        Republic of Panama	4458759	83318176900 	74180	565000	41910.111	136.6	0	0	0	0	167768.43
+        Republic of Sierra Leone	8460512	6411869546 	72180	1584000	24954.2	160	0	0	0	0	154724.77
+        United Arab Emirates	10483751	514130432653 	71020	50300	3173	0.15	0	0	0	0	7833.62
+        Georgia	3715483	30777833585 	69490	312000	28224	58.13	0	0	0	0	0
+        Ireland	5307600	551394889340 	68890	436000	7900.2	49	0	0	0	0	0
+        Republic of Lithuania	2871585	79789877416 	62604	2279000	22038.889	15.46	0	0	0	0	0
+        Republic of Latvia	1877445	42247850065 	62230	1362000	34185.3	16.94	0	0	0	0	0
+        Democratic Socialist Republic of Sri Lan	22037000	84356863744 	61860	1372000	21067	52.8	0	0	0	0	13115.19
+        Republic of Croatia	3859686	84393795502 	55960	857000	19441.1	37.7	0	0	0	0	0
+        Republic of Togo	9304337	9171261838 	54390	2650000	12033.5	11.5	0	0	0	0	107.51
+        Bosnia and Herzegovina	3185073	27514782476 	51200	1008000	21879.1	35.5	0	0	0	0	0
+        Republic of Costa Rica	5105525	86497941439 	51060	243000	30676.1	113	0	0	0	0	38575.92
+        Dominican Republic	11331265	121444279314 	48198.02	877000	21602.8	23.5	0	0	0	0	19306.92
+        Slovakia Republic	5426740	132908336234 	48080	1326000	19259	12.6	0	0	0	0	0
+        Estonia	1370286	41291245222 	42730	700000	24384	12.71	0	0	0	0	0
+        Kingdom of Denmark	5946952	407091920305 	40000	2357000	6303.2	6	0	0	0	0	0
+        Switzerland	8888093	884940402230 	39509.63	395464.6	12759.9	40.4	0	0	0	0	0
+        Kingdom of Bhutan	786385	0 	38140	94000	27290.4	78	0	0	0	0	0
+        Kingdom of the Netherlands	17877117	1154361305400 	33670	1003000	3713.689	11	0	0	0	0	0
+        Republic of Moldova	2457783	16539436547 	32890	1711000	3865	1.62	0	0	0	0	0
+        Kingdom of Belgium	11787423	644782756683 	30494	865640	6893	12	0	0	0	0	0
+        Kingdom of Lesotho	2311472	2117962451 	30360	429000	345.2	5.23	0	0	0	0	0
+        Republic of Armenia	2990900	24085749592 	28470	443420	3280.5	6.859	0	0	0	0	0
+        Republic of Guinea-Bissau	2153339	2048348108 	28120	300000	19631.3	16	0	0	0	0	292745.94
+        Republic of Equatorial Guinea	1847549	12337550584 	28050	53000	24317	26	0	0	0	0	25991.54
+        Solomon Islands	800005	1633319401 	27990	23000	25215.1	44.7	0	0	0	0	57212.72
+        Republic of Haiti	11637398	19850829758 	27560	1005000	3410.8	13.007	0	0	0	0	15473.51
+        Albania	2745972	23547179830 	27400	599900	7889	26.9	0	0	0	0	0
+        Republic of Burundi	13689450	2642161669 	25680	1270000	2796.4	10.06	0	0	0	0	0
+        The former Yugoslav Republic of Macedoni	1827816	15763621848 	25220	417000	10014.9	5.4	0	0	0	0	0
+        Republic of Rwanda	13954471	14097768472 	24670	1268400	2780	9.5	0	0	0	0	0
+        Republic of Djibouti	1152944	4098530514 	23180	3000	59.644	0.3	0	0	0	0	514.34
+        Belize	411106	3066850000 	22810	100000	12547.3	15.26	0	0	0	0	44786.96
+        Republic of El Salvador	6309624	34015620000 	20720	721000	5748.8	15.63	0	0	0	0	35712.39
+        Republic of Slovenia	2120461	69148468417 	20136.4	180950	12337.611	18.67	0	0	0	0	0
+        New Caledonia	289870	0 	18280	5970	8378.2	0	0	0	0	0	27810.04
+        Republic of Fiji Islands	924145	5442046565 	18270	76800	11533.8	28.55	0	0	0	0	49207.83
+        State of Kuwait	4853420	163704878876 	17820	8000	62.5	0	0	0	0	0	0.29
+        Kingdom of Swaziland	1230506	4442875788 	17200	177000	4999.8	2.64	0	0	0	0	0
+        Republic of Vanuatu	320409	1126313359 	12190	20000	4423	10	0	0	0	0	1759.67
+        State of Qatar	2656032	213002809330 	11490	21000	0	0.056	0	0	0	0	918.84
+        Jamaica	2839786	19423355409 	10830	120000	6046.611	10.823	0	0	0	0	9865.73
+        Lebanese Republic	5773493	0 	10230	139300	1445.3	4.8	0	0	0	0	0
+        Republic of the Gambia	2697845	2396111022 	10120	440000	2312.011	3	0	0	0	0	69543.89
+        Commonwealth of the Bahamas	399440	14338500000 	10010	8000	5098.6	0.7	0	0	0	0	117511.97
+        Republic of Cyprus	1344976	33886930712 	9240	95156.6	1724.9	0.78	0	0	0	0	0
+        Puerto Rico	3205691	117902300000 	8870	50200	4973.1	7.1	0	0	0	0	7753.36
+        Brunei Darussalam	458949	15128292981 	5270	4000	3800	8.5	0	0	0	0	13302.28
+        Republic of Trinidad and Tobago	1367510	27372285698 	5130	25000	2273.5	3.84	0	0	0	0	7527.18
+        Republic of Cape Verde	522331	2533819406 	4030	50000	463.2	0.3	0	0	0	0	0
+        French Polynesia	281118	0 	3471	2500	1494.6	0	0	0	0	0	84.03
+        Independent State of Samoa	216663	938189444 	2780	11290	1607.1	0	0	0	0	0	303.04
+        Grand Duchy of Luxembourg	666430	85755006124 	2574.46	62472	887	1	0	0	0	0	0
+        Republic of Mauritius	1261041	14644524819 	1997	75000	388.5	2.751	0	0	0	0	397.67
+        Comoros	850387	1352380971 	1861	65000	320.4	1.2	0	0	0	0	112.61
+        Faroe Islands	54482	3907323961 	1370	70	0.8	0	0	0	0	0	0
+        Democratic Republic of Sao Tome and Prin	230871	678976265 	960	4000	506.6	2.18	0	0	0	0	62.08
+        Turks and Caicos Islands	46198	1402054391 	950	1000	105.2	0	0	0	0	0	15911.95
+        Republic of Kiribati	132530	279208903 	810	2000	11.8	0	0	0	0	0	356.6
+        State of Bahrain	1577059	46079867021 	790	2100	7.4	0.004	0	0	0	0	32.32
+        Commonwealth of Dominica	66510	653992593 	750	6000	478.7	0.2	0	0	0	0	19.58
+        Kingdom of Tonga	104597	0 	720	20000	89.5	0	0	0	0	0	1488.71
+        Republic of Singapore	5917648	501427500080 	718	560	152.1	0.6	0	0	0	0	667.25
+        Federated States of Micronesia	112630	460000000 	700	2000	644.8	0	0	0	0	0	9093.8
+        Saint Lucia	179285	2430148148 	610	2670	207.7	0.3	0	0	0	0	202.78
+        Andorra	80856	3785067332 	470	747.6	160	0.3156	0	0	0	0	0
+        Republic of Palau	17727	281849063 	460	300	415.7	0	0	0	0	0	5061.74
+        Commonwealth of the Northern Mariana Isl	45143	0 	460	80	243.6	0	0	0	0	0	1.04
+        Republic of Seychelles	119773	2141450171 	460	150	337	0	0	0	0	0	1732.55
+        Antigua and Barbuda	93316	2033085185 	440	4000	79.911	0.052	0	0	0	0	690.92
+        Barbados	282336	6720733200 	430	7000	63	0.08	0	0	0	0	21.53
+        Saint Vincent and the Grenadines	101323	1065962963 	390	2000	285.4	0.1	0	0	0	0	45.58
+        Virgin Islands of the United States	104917	0 	350	900	202.1	0	0	0	0	0	226.11
+        Grenada	117081	1316733333 	340	3000	177	0.2	0	0	0	0	248.73
+        Republic of Malta	552747	22328640242 	320	7800	4.6	0.0505	0	0	0	0	0
+        Republic of Maldives	525994	6590894302 	300	3900	8.2	0.03	0	0	0	0	121.74
+        Federation of Saint Kitts and Nevis	46758	1055499778 	260	5000	110	0.024	0	0	0	0	25.82
+        Cayman Islands	73038	7139428558 	240	200	126.4	0	0	0	0	0	6455.1
+        American Samoa	47521	0 	200	970	170.7	0	0	0	0	0	25.57
+        Aruba	107359	3648573136 	180	2000	4.2	0	0	0	0	0	95.77
+        Republic of the Marshall Islands	38827	259300000 	180	500	94	0	0	0	0	0	21.15
+        Principality of Liechtenstein	39850	0 	160	1730	67	0	0	0	0	0	0
+        British Virgin Islands	38985	0 	150	1000	36.2	0	0	0	0	0	100.94
+        Republic of San Marino	33860	0 	60	1985	10	0	0	0	0	0	0
+        Bermuda	64698	8141700000 	54	300	10	0	0	0	0	0	31.12
+        Tuvalu	9816	62280312 	30	0	10	0	0	0	0	0	31.41
+        Republic of Nauru	11875	154170289 	20	0	0	0.01	0	0	0	0	1.04
+        Principality of Monaco	38956	9995350547 	2.084	0	0	0	0	0	0	0	0
+        Saint Pierre and Miquelon	0	0 	0	0	0	0	0	0	0	0	0
+        Anguilla	0	0 	0	0	0	0	0	0	0	0	7.15
+        Montserrat	0	0 	0	0	0	0	0	0	0	0	0
+        Guadeloupe	0	0 	0	0	0	0	0	0	0	0	3156.37
+        Martinique	0	0 	0	0	0	0	0	0	0	0	1925.79
+        Netherlands Antilles	0	0 	0	0	0	0	0	0	0	0	0
+        Cook Islands	0	0 	0	0	0	0	0	0	0	0	3.15
+        Niue	0	0 	0	0	0	0	0	0	0	0	0
+        Pitcairn	0	0 	0	0	0	0	0	0	0	0	0
+        Norfolk Island	0	0 	0	0	0	0	0	0	0	0	0
+        Heard Island and McDonald Islands	0	0 	0	0	0	0	0	0	0	0	0
+        Bouvet Island	0	0 	0	0	0	0	0	0	0	0	0
+        Antarctica	0	0 	0	0	0	0	0	0	0	0	0
+        South Georgia and the South Sandwich Isl	0	0 	0	0	0	0	0	0	0	0	0
+        Tokelau	0	0 	0	0	0	0	0	0	0	0	0
+        French Southern Territories	0	0 	0	0	0	0	0	0	0	0	668.25
+        Wallis and Futuna	0	0 	0	0	0	0	0	0	0	0	47.54
+        Cocos (Keeling) Islands	0	0 	0	0	0	0	0	0	0	0	4.09
+        Prince Edward Island	0	0 	0	0	0	0	0	0	0	0	0
+        Western Sahara	0	0 	0	0	0	0	0	0	0	0	0
+        Mayotte	0	0 	0	0	0	0	0	0	0	0	553.47
+        Reunion	0	0 	0	0	0	0	0	0	0	0	0
+        Saubt Helena	0	0 	0	0	0	0	0	0	0	0	0
+        French Guiana	0	0 	0	0	0	0	0	0	0	0	54209.55
+        Falkland Islands (Malvinas)	0	0 	0	0	0	0	0	0	0	0	0
+        Svalbard and Jan Mayen	0	0 	0	0	0	0	0	0	0	0	0
+        Gibraltar	38471	0 	0	0	0	0	0	0	0	0	0
+        State of Israel	9756600	513611100816 	0	377000	0	0.75	0	0	0	0	0
+        Romania	0	0 	0	0	0	0	0	0	0	0	0
+        Republic of Serbia	0	0 	0	0	0	0	0	0	0	0	0
+        Reoublic of Montenegro	0	0 	0	0	0	0	0	0	0	0	0
+        Vatican City State	0	0 	0	0	0	0	0	0	0	0	0
+        East Timor	0	0 	0	0	0	0	0	0	0	0	0
+        Christmas Island	0	0 	0	0	0	0	0	0	0	0	0
+        Area Under Dispute	0	0 	0	0	0	0	0	0	0	0	0
+        British Indian Ocean Territory	0	0 	0	0	0	0	0	0	0	0	0
+        
+         </div>
+
+     <script>
+         // Function to show the selected tab
+         function showTab(tabId) {
+             // Hide all tab contents
+             document.querySelectorAll('.tab-content').forEach(tab => {
+                 tab.classList.remove('active');
+             });
+             
+             // Remove active class from all tabs
+             document.querySelectorAll('.nav-tab').forEach(tab => {
+                 tab.classList.remove('active');
+             });
+             
+             // Add active class to the clicked tab and its content
+             document.getElementById(tabId).classList.add('active');
+             document.querySelector(`.nav-tab[onclick="showTab('${tabId}')"]`).classList.add('active');
+             
+             // Hide map title when not in map view
+             if (tabId !== 'map-view') {
+                 document.getElementById('map-title').style.display = 'none';
+             } else {
+                 document.getElementById('map-title').style.display = 'block';
+             }
+         }
+         
+         // Function to change the map
+         function changeMap(mapUrl) {
+             const mapContainer = document.getElementById('map');
+             const legendContainer = document.getElementById('legend');
+             
+             // 恢复原有布局
+             mapContainer.style.width = '70%';
+             mapContainer.style.borderRight = '4px solid #1a4b8c';
+             legendContainer.style.display = 'block';
+             
+             // 清除现有内容
+             mapContainer.innerHTML = '';
+             legendContainer.innerHTML = '';
+             
+             // 创建主图像元素
+             const imgElement = document.createElement('img');
+             imgElement.src = mapUrl;
+             imgElement.alt = "Map Image";
+             mapContainer.appendChild(imgElement);
+             
+             // 创建图例图像元素
+             const legendImgElement = document.createElement('img');
+             legendImgElement.src = mapUrl.replace('_1.png', '_2.png');
+             legendImgElement.alt = "Legend Image";
+             
+             // 为矿产资源图例添加特殊类
+             if (mapUrl.includes('rareearth') || 
+                 mapUrl.includes('iron') || 
+                 mapUrl.includes('copper') || 
+                 mapUrl.includes('lithium')) {
+                 legendImgElement.classList.add('mineral-legend');
+             }
+             
+             legendContainer.appendChild(legendImgElement);
+             
+             // 更新标题
+             let title = "Statistical Data Map Related with Natural Resources in the World";
+             if (mapUrl.includes('population')) {
+                 title = "World Population Distribution Map";
+             } else if (mapUrl.includes('GDP')) {
+                 title = "World GDP Distribution Map";
+             } else if (mapUrl.includes('Arable')) {
+                 title = "World Arable Area Distribution Map";
+             } else if (mapUrl.includes('forest')) {
+                 title = "World Forest Area Distribution Map";
+             } else if (mapUrl.includes('rareearth')) {
+                 title = "World Rare Earth Reserves Distribution Map";
+             } else if (mapUrl.includes('iron')) {
+                 title = "World Iron Reserves Distribution Map";
+             } else if (mapUrl.includes('copper')) {
+                 title = "World Copper Reserves Distribution Map";
+             } else if (mapUrl.includes('lithium')) {
+                 title = "World Lithium Reserves Distribution Map";
+             } else if (mapUrl.includes('Mangrove')) {
+                 title = "World Mangrove Area Distribution Map";
+             }
+             
+             document.getElementById('map-title').textContent = title;
+             
+             // 确保地图视图处于活动状态
+             showTab('map-view');
+         }
+         
+         // Function to search data
+         function resetTable() {
+             // Clear the search input
+             document.getElementById('searchInput').value = '';
+             // Repopulate the table with all data
+             populateTable();
+         }
+         
+         function populateTable() {
+             const tableBody = document.getElementById('tableBody');
+             // Clear existing table data
+             tableBody.innerHTML = '';
+             
+             // Get raw data
+             const rawData = document.getElementById('rawData').textContent;
+             const lines = rawData.split('\n').filter(line => line.trim() !== '');
+             
+             if (lines.length > 0) {
+                 // Process header
+                 const headers = lines[0].split('\t');
+                 
+                 // Process data rows
+                 for (let i = 1; i < lines.length; i++) {
+                     const values = lines[i].split('\t');
+                     if (values.length < headers.length) continue;
+                     
+                     const row = document.createElement('tr');
+                     for (let j = 0; j < headers.length; j++) {
+                         const cell = document.createElement('td');
+                         cell.textContent = values[j] || '-';
+                         row.appendChild(cell);
+                     }
+                     
+                     tableBody.appendChild(row);
+                 }
+             }
+         }
+         
+         function searchData() {
+             const searchField = document.getElementById('fieldSelect').value;
+             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+             const tableBody = document.getElementById('tableBody');
+             
+             // Clear existing table data
+             tableBody.innerHTML = '';
+             
+             // Get raw data
+             const rawData = document.getElementById('rawData').textContent;
+             const lines = rawData.split('\n').filter(line => line.trim() !== '');
+             
+             // Process header
+             const headers = lines[0].split('\t');
+             
+             // 获取国家名称字段的索引 - 修正：处理select中的'Country Name'和数据中的'Country NAME'不匹配问题
+             const countryNameIndex = headers.findIndex(header => header.toLowerCase().replace(/\s+/g, '') === 'countryname');
+             
+             // Process data rows
+             for (let i = 1; i < lines.length; i++) {
+                 const values = lines[i].split('\t');
+                 if (values.length < headers.length) continue;
+                 
+                 // Check if the row matches the search criteria
+                 // 修正：处理select中的字段名与数据中的字段名可能不完全匹配的问题
+                 let fieldIndex = headers.indexOf(searchField);
+                 if (fieldIndex === -1 && searchField === 'Country Name') {
+                     fieldIndex = countryNameIndex; // 如果是国家名称字段且未找到，使用之前找到的索引
+                 }
+                 
+                 const fieldValue = values[fieldIndex] ? values[fieldIndex].toLowerCase() : '';
+                 const countryName = values[countryNameIndex] ? values[countryNameIndex].toLowerCase() : '';
+                 
+                 // 使用模糊查询，不区分大小写，不需要输入全部查询内容
+                 // 同时支持在选定字段和国家名称字段中搜索
+                 if (searchTerm === '' || fieldValue.includes(searchTerm) || countryName.includes(searchTerm)) {
+                     const row = document.createElement('tr');
+                     
+                     // Add cells for each column
+                     for (let j = 0; j < headers.length; j++) {
+                         const cell = document.createElement('td');
+                         cell.textContent = values[j] || '-';
+                         
+                         // 高亮显示匹配的内容
+                         if ((j === fieldIndex && searchTerm !== '' && fieldValue.includes(searchTerm)) ||
+                             (j === countryNameIndex && searchTerm !== '' && countryName.includes(searchTerm))) {
+                             cell.classList.add('highlighted');
+                         }
+                         
+                         row.appendChild(cell);
+                     }
+                     
+                     tableBody.appendChild(row);
+                 }
+             }
+             
+             // Show the resource table tab
+             showTab('resource-table');
+         }
+         
+         // Populate table when the DOM is ready
+         document.addEventListener('DOMContentLoaded', function() {
+             // Populate the table with initial data
+             populateTable();
+             
+             // Load the default map
+             changeMap('GDP_1.png');
+         });
+
+
+         // 初始化echarts图表的函数
+         function initMangroveCharts() {
+                 // 组件1：世界红树林面积变化 - 只有环形图部分
+                 var gaugeChart = echarts.init(document.getElementById('mangrove-gauge'));
+                 gaugeChart.setOption({
+                     series: [{
+                         type: 'pie',
+                         radius: ['60%', '80%'],
+                         avoidLabelOverlap: false,
+                         startAngle: 225,
+                         endAngle: -45,
+                         hoverAnimation: false,
+                         itemStyle: {
+                             borderRadius: 10,
+                             borderColor: '#fff',
+                             borderWidth: 2
+                         },
+                         label: { show: false },
+                         data: [
+                             { value: 14.93, name: 'Mangroves', itemStyle: { color: '#00cfcf' } },
+                             { value: 85.07, name: 'Non-mangroves', itemStyle: { color: '#f0f0f0' } }
+                         ],
+                         emphasis: {
+                             scale: false
+                         }
+                     }],
+                     tooltip: { 
+                         trigger: 'item',
+                         formatter: function(params) {
+                             if (params.name === 'Non-mangroves') {
+                                 return `
+                                     <div style="font-weight:bold;">Non mangroves</div>
+                                     <div>Percentage: 85.07%</div>
+                                     <div>Coverage: 1,819,969.96 km²</div>
+                                 `;
+                             } else {
+                                 return `
+                                     <div style="font-weight:bold;">Coastline coverage in 2020</div>
+                                     <div>Percentage: 14.93%</div>
+                                     <div>Coverage: 319,338.96 km²</div>
+                                 `;
+                             }
+                         },
+                         backgroundColor: 'rgba(255,255,255,0.9)',
+                         textStyle: { color: '#333' },
+                         borderColor: '#ccc',
+                         borderWidth: 1
+                     }
+                 });
+
+                 // 组件2：世界红树林面积变化趋势 - 反转趋势线并使用正值
+                 var trendChart = echarts.init(document.getElementById('mangrove-trend'));
+                 var years = [1996, 2007, 2008, 2009, 2010, 2015, 2016, 2017, 2018, 2019, 2020];
+                 // 将负值转为正值，表示减少趋势
+                 var changes = [0, 2631.97, 3959.23, 4150.87, 4583.95, 5259.55, 5534.6, 5343.93, 5049.97, 4998.89, 5245.24];
+                 
+                 trendChart.setOption({
+                     tooltip: { 
+                         trigger: 'axis',
+                         formatter: function(params) {
+                             var d = params[0];
+                             return `<div style="text-align:center;font-weight:bold">${d.axisValue}</div><div>Loss</div><div style="font-weight:bold;font-size:16px">${d.data} km²</div>`;
+                         },
+                         backgroundColor: 'rgba(255,255,255,0.9)',
+                         textStyle: { color: '#333' },
+                         borderColor: '#ccc',
+                         borderWidth: 1,
+                         padding: 10
+                     },
+                     grid: {
+                         left: '6%',
+                         right: '6%',
+                         bottom: '10%',
+                         top: '15%',
+                         containLabel: true
+                     },
+                     xAxis: { 
+                         type: 'category', 
+                         data: years,
+                         axisLine: { lineStyle: { color: '#999' } },
+                         axisLabel: { 
+                             color: '#666',
+                             fontSize: 12,
+                             interval: 0
+                         },
+                         boundaryGap: false
+                     },
+                     yAxis: { 
+                         type: 'value', 
+                         name: 'km²',
+                         nameLocation: 'end',
+                         nameGap: 15,
+                         nameTextStyle: {
+                             fontSize: 14,
+                             color: '#666'
+                         },
+                         axisLine: { show: false },
+                         axisTick: { show: false },
+                         axisLabel: { 
+                             color: '#666',
+                             fontSize: 12,
+                             formatter: function(value) {
+                                 if (value === 0) return 0;
+                                 return value.toLocaleString();
+                             }
+                         },
+                         splitLine: { 
+                             lineStyle: { 
+                                 type: 'dashed', 
+                                 color: '#eee',
+                                 opacity: 0.8
+                             } 
+                         },
+                         min: 0,
+                         max: 6000,
+                         interval: 1500
+                     },
+                     series: [{
+                         name: 'Loss',
+                         type: 'line',
+                         data: changes,
+                         itemStyle: { 
+                             color: '#00cfcf',
+                             borderWidth: 3,
+                             borderColor: '#fff'
+                         },
+                         lineStyle: { 
+                             width: 5,
+                             color: '#00cfcf',
+                             shadowColor: 'rgba(0,207,207,0.3)',
+                             shadowBlur: 10
+                         },
+                         smooth: true,
+                         symbol: 'circle',
+                         symbolSize: 15,
+                         emphasis: {
+                             itemStyle: {
+                                 color: '#00cfcf',
+                                 borderColor: '#fff',
+                                 borderWidth: 3,
+                                 shadowColor: 'rgba(0,0,0,0.5)',
+                                 shadowBlur: 10
+                             }
+                         },
+                         z: 10
+                     }]
+                 });
+
+                 // 组件3：区域分布环形图
+                 var regionChart = echarts.init(document.getElementById('mangrove-region'));
+                 var regionData = [
+                     { name: 'East & Southern Africa', value: 7749, itemStyle: { color: '#41D3BD' } },
+                     { name: 'Middle East', value: 358, itemStyle: { color: '#173E55' } },
+                     { name: 'South Asia', value: 9749, itemStyle: { color: '#0D4D56' } },
+                     { name: 'Southeast Asia', value: 49500, itemStyle: { color: '#A9E190' } },
+                     { name: 'East Asia', value: 221, itemStyle: { color: '#F2E3D5' } },
+                     { name: 'Australia & New Zealand', value: 10348, itemStyle: { color: '#E3C567' } },
+                     { name: 'Pacific Islands', value: 5790, itemStyle: { color: '#F28B66' } },
+                     { name: 'North & Central America & Caribbean', value: 21270, itemStyle: { color: '#F26157' } },
+                     { name: 'South America', value: 19469, itemStyle: { color: '#BF4342' } },
+                     { name: 'West & Central Africa', value: 22802, itemStyle: { color: '#7C77B9' } }
+                 ];
+                 var colors = ['#41D3BD', '#173E55', '#0D4D56', '#A9E190', '#F2E3D5', '#E3C567', '#F28B66', '#F26157', '#BF4342', '#7C77B9'];
+                 regionChart.setOption({
+                     title: { 
+                         text: 'Global Mangrove Extent',
+                         left: 'center',
+                         top: 'center',
+                         textStyle: { 
+                             fontSize: 18, 
+                             fontWeight: 'bold',
+                             color: '#006064'
+                         }
+                     },
+                     tooltip: { 
+                         trigger: 'item', 
+                         formatter: function(params) {
+                             return `
+                                 <div style="font-weight:bold">${params.name}</div>
+                                 <div>${params.value.toLocaleString()} km²</div>
+                                 <div>${params.percent}% of global</div>
+                             `;
+                         },
+                         backgroundColor: 'rgba(255,255,255,0.9)',
+                         textStyle: { color: '#333' },
+                         borderColor: '#ccc',
+                         borderWidth: 1,
+                         padding: 10
+                     },
+                     legend: { 
+                         show: false
+                     },
+                     series: [{
+                         type: 'pie',
+                         radius: ['30%', '75%'],
+                         center: ['50%', '50%'],
+                         avoidLabelOverlap: true,
+                         itemStyle: {
+                             borderRadius: 5,
+                             borderColor: '#fff',
+                             borderWidth: 2,
+                             shadowBlur: 5,
+                             shadowColor: 'rgba(0, 0, 0, 0.2)'
+                         },
+                         label: { 
+                             show: false
+                         },
+                         emphasis: {
+                             itemStyle: {
+                                 shadowBlur: 10,
+                                 shadowOffsetX: 0,
+                                 shadowColor: 'rgba(0, 0, 0, 0.5)'
+                             },
+                             scale: true,
+                             scaleSize: 10
+                         },
+                         data: regionData,
+                         animationType: 'scale',
+                         animationEasing: 'elasticOut'
+                     }],
+                     color: colors
+                 });
+
+                 // 区域分布表格
+                 var tableHTML = `
+                     <div style="padding: 5px; max-width: 100%; overflow-x: auto;">
+                         <table style="width:100%; border-collapse: collapse; border-spacing: 0; background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1); border-radius: 5px;">
+                             <thead>
+                                 <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                     <th style="padding: 12px 15px; text-align: left; font-weight: bold; color: #333; border-right: 1px solid #dee2e6;">Region</th>
+                                     <th style="padding: 12px 15px; text-align: right; font-weight: bold; color: #333; border-right: 1px solid #dee2e6;">Sum of area km²</th>
+                                     <th style="padding: 12px 15px; text-align: right; font-weight: bold; color: #333;">Sum of % global</th>
+                                 </tr>
+                             </thead>
+                             <tbody>
+                 `;
+
+                 // 添加所有区域数据行
+                 var regions = [
+                     { name: 'East & Southern Africa', area: 7749, percent: '5.3%', color: '#41D3BD' },
+                     { name: 'Middle East', area: 358, percent: '0.2%', color: '#173E55' },
+                     { name: 'South Asia', area: 9749, percent: '6.6%', color: '#0D4D56' },
+                     { name: 'Southeast Asia', area: 49500, percent: '33.6%', color: '#A9E190' },
+                     { name: 'East Asia', area: 221, percent: '0.2%', color: '#F2E3D5' },
+                     { name: 'Australia & New Zealand', area: 10348, percent: '7.0%', color: '#E3C567' },
+                     { name: 'Pacific Islands', area: 5790, percent: '3.9%', color: '#F28B66' },
+                     { name: 'North & Central America & Caribbean', area: 21270, percent: '14.4%', color: '#F26157' },
+                     { name: 'South America', area: 19469, percent: '13.2%', color: '#BF4342' },
+                     { name: 'West & Central Africa', area: 22802, percent: '15.5%', color: '#7C77B9' }
+                 ];
+
+                 regions.forEach(function(region, index) {
+                     tableHTML += `
+                         <tr style="border-bottom: 1px solid #dee2e6;">
+                             <td style="padding: 10px 15px; text-align: left; color: #333; border-right: 1px solid #dee2e6;">
+                                 <div style="display: flex; align-items: center;">
+                                     <div style="width: 12px; height: 12px; background-color: ${region.color}; margin-right: 8px; border-radius: 2px;"></div>
+                                     ${region.name}
+                                 </div>
+                             </td>
+                             <td style="padding: 10px 15px; text-align: right; color: #333; border-right: 1px solid #dee2e6;">${region.area.toLocaleString()}</td>
+                             <td style="padding: 10px 15px; text-align: right; color: #333;">${region.percent}</td>
+                         </tr>
+                     `;
+                 });
+
+                 // 添加总计行
+                 tableHTML += `
+                         <tr style="border-top: 2px solid #dee2e6; font-weight: bold; background-color: #f8f9fa;">
+                             <td style="padding: 12px 15px; text-align: left; color: #333; border-right: 1px solid #dee2e6;">Grand Total</td>
+                             <td style="padding: 12px 15px; text-align: right; color: #333; border-right: 1px solid #dee2e6;">147,256</td>
+                             <td style="padding: 12px 15px; text-align: right; color: #333;">100%</td>
+                         </tr>
+                     </tbody>
+                     </table>
+                     </div>
+                 `;
+
+                 document.getElementById('mangrove-region-table').innerHTML = tableHTML;
+             }
+
+             // 在Tab切换时确保图表正确渲染
+             var originalShowTab = window.showTab;
+             window.showTab = function(tabId) {
+                 originalShowTab(tabId);
+                 
+                 // 当切换到Focus On Mangrove选项卡时，初始化或重绘图表
+                 if (tabId === 'focus-mangrove') {
+                     setTimeout(function() {
+                         initMangroveCharts();
+                     }, 100);
+                 }
+             };
+
+             // 页面加载初始化图表
+             setTimeout(function() {
+                 if (document.getElementById('focus-mangrove').classList.contains('active')) {
+                     initMangroveCharts();
+                 }
+             }, 200);
+         
+     </script>
+
+     <script>
+        function loadKeplerMap() {
+            const mapContainer = document.getElementById('map');
+            const legendContainer = document.getElementById('legend');
+            
+            // 清除现有内容
+            mapContainer.innerHTML = '';
+            legendContainer.innerHTML = '';
+            
+            // 调整地图容器样式
+            mapContainer.style.width = '100%';
+            mapContainer.style.borderRight = 'none';  // 移除分界线
+            legendContainer.style.display = 'none';   // 隐藏图例区域
+            
+            // 创建iframe加载Kepler.gl地图
+            const keplerFrame = document.createElement('iframe');
+            keplerFrame.src = 'https://kepler.gl/demo/map?mapUrl=https://dl.dropboxusercontent.com/scl/fi/pqs1p5rgxc43q7iajxbiu/keplergl_16d481n.json?rlkey=9b0gotsi6l302f6ahot1eobbb&dl=0';
+            keplerFrame.style.width = '100%';
+            keplerFrame.style.height = '100%';
+            keplerFrame.style.border = 'none';
+            
+            // 添加加载提示
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.position = 'absolute';
+            loadingDiv.style.top = '50%';
+            loadingDiv.style.left = '50%';
+            loadingDiv.style.transform = 'translate(-50%, -50%)';
+            loadingDiv.style.backgroundColor = 'rgba(0,0,0,0.7)';
+            loadingDiv.style.color = 'white';
+            loadingDiv.style.padding = '20px';
+            loadingDiv.style.borderRadius = '5px';
+            loadingDiv.style.zIndex = '1000';
+            loadingDiv.innerHTML = 'Loading World Resource Overview Map...<br>Please wait about 10-20 seconds';
+            
+            mapContainer.appendChild(keplerFrame);
+            mapContainer.appendChild(loadingDiv);
+            
+            // 10秒后移除加载提示
+            setTimeout(() => {
+                loadingDiv.style.display = 'none';
+            }, 13000);
+            
+            // 更新标题
+            document.getElementById('map-title').textContent = "World Resource Overview - Interactive Map";
+            
+            // 确保地图视图处于活动状态
+            showTab('map-view');
+        }
+     </script>
+</body>
+</html>
+
